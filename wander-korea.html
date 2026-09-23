@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wander Korea</title>
+<meta name="theme-color" content="#0f766e">
+<style>
+:root{
+  --bg:#f6f7f5; --card:#ffffff; --ink:#1c2321; --muted:#66716d; --line:#e3e7e4;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#d9f0ec; --warn:#b45309; --warn-soft:#fdf1e2;
+  --err:#b42318; --err-soft:#fdecea; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#111615; --card:#1a2120; --ink:#e8eeec; --muted:#9aa7a2; --line:#2b3432;
+    --accent:#2dd4bf; --accent-ink:#06201d; --accent-soft:#163b37; --warn:#f5b04c; --warn-soft:#3a2c14;
+    --err:#ff8a80; --err-soft:#3b1d1a; --shadow:none; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Roboto,sans-serif;}
+button,input,select{font:inherit;color:inherit}
+.app{max-width:560px;margin:0 auto;padding:0 16px 96px;min-height:100vh}
+header{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:14px 0 10px}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.3px;flex:1}
+.logo span{color:var(--accent)}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{border:0;background:transparent;padding:6px 12px;font-size:14px;cursor:pointer}
+.lang button.on{background:var(--accent);color:var(--accent-ink);font-weight:700}
+h2{font-size:17px;margin:22px 0 10px}
+.hero{background:linear-gradient(135deg,#0f766e,#155e75);color:#fff;border-radius:18px;padding:20px 18px;margin-top:4px}
+.hero h1{margin:0 0 4px;font-size:22px;line-height:1.3}
+.hero p{margin:0;opacity:.9;font-size:14px}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer;font-size:14px;line-height:1.25}
+.chip .ic{display:block;font-size:24px;margin-bottom:2px}
+.chip.on{border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+.row{display:flex;gap:8px}
+.btn{border:0;border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:700;font-size:15px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);width:100%;font-size:17px;padding:15px}
+.btn.soft{background:var(--card);border:1.5px solid var(--line);flex:1}
+.btn.soft.on{border-color:var(--accent);background:var(--accent-soft)}
+.btn:disabled{opacity:.5;cursor:default}
+.regions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.reg{position:relative;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;font-size:14px}
+.reg.on{border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+.reg .tag{position:absolute;top:-8px;right:6px;font-size:10px;padding:1px 6px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-weight:700}
+.reg .tag.new{background:var(--accent-soft);color:var(--accent)}
+.spot{margin-top:10px;background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);font-size:14px}
+.spot b{font-size:15px}
+.note{font-size:13px;color:var(--muted)}
+.msg{border-radius:12px;padding:12px 14px;font-size:14px;margin:12px 0}
+.msg.err{background:var(--err-soft);color:var(--err)}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.ok{background:var(--accent-soft);color:var(--accent)}
+.cards{display:flex;flex-direction:column;gap:12px}
+.card{display:flex;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;min-height:104px}
+.card .img{width:108px;flex:none;background:var(--accent-soft) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:34px}
+.card .body{padding:10px 12px;flex:1;min-width:0}
+.card .t{font-weight:700;font-size:15px;line-height:1.3;margin-bottom:2px}
+.card .a{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700}
+.pill.best{background:var(--warn-soft);color:var(--warn)}
+.heart{border:0;background:transparent;font-size:22px;padding:8px 10px;cursor:pointer;align-self:flex-start}
+.loading{text-align:center;padding:30px;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;margin:0 auto 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav div{display:flex;max-width:560px;width:100%}
+nav button{flex:1;border:0;background:transparent;padding:10px 0 12px;cursor:pointer;font-size:12px;color:var(--muted)}
+nav button .ic{display:block;font-size:22px}
+nav button.on{color:var(--accent);font-weight:700}
+.badge{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;padding:0 6px;margin-left:2px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10;display:none;align-items:flex-end;justify-content:center}
+.sheet-bg.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding-bottom:24px}
+.sheet .hero-img{width:100%;height:220px;background:var(--accent-soft) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:60px}
+.sheet .in{padding:16px}
+.sheet h3{margin:0 0 6px;font-size:20px;line-height:1.3}
+.sheet .ov{font-size:14.5px;white-space:pre-line;margin:12px 0}
+.kv{font-size:14px;margin:4px 0;color:var(--muted)}
+.kv b{color:var(--ink);font-weight:600}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;border:1.5px solid var(--line);border-radius:12px;padding:10px;color:var(--ink);font-weight:600;font-size:14px}
+.close{position:sticky;top:10px;float:right;margin:10px 10px -46px 0;border:0;background:rgba(0,0,0,.55);color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;z-index:2}
+.field{margin:10px 0}
+.field label{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
+.field input,.field select{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
+.panel{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.panel h3{margin:0 0 6px;font-size:16px}
+.stop{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line)}
+.stop:last-child{border-bottom:0}
+.stop .tm{flex:none;width:52px;font-weight:800;color:var(--accent);font-size:14px;padding-top:2px}
+.stop .nm{font-weight:700;font-size:15px;cursor:pointer}
+.stop .leg{font-size:12px;color:var(--muted)}
+.stop .rm{margin-left:auto;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}
+.ai-out{white-space:pre-wrap;font-size:14.5px;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.empty .ic{font-size:44px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Wander<span>Korea</span></div>
+    <div class="lang"><button data-lang="en">EN</button><button data-lang="ko">한국어</button></div>
+  </header>
+
+  <!-- EXPLORE -->
+  <section id="v-explore">
+    <div class="hero"><h1 data-t="heroT"></h1><p data-t="heroS"></p></div>
+    <div id="keyWarn" class="msg warn hidden"></div>
+
+    <h2 data-t="step1"></h2>
+    <div class="chips" id="cats"></div>
+
+    <h2 data-t="step2"></h2>
+    <div class="row">
+      <button class="btn soft" id="btnSurprise"></button>
+      <button class="btn soft" id="btnNear"></button>
+    </div>
+    <div class="regions" id="regions"></div>
+    <div class="spot hidden" id="spot"></div>
+
+    <div style="margin-top:18px"><button class="btn primary" id="btnFind"></button></div>
+    <div id="status"></div>
+    <div class="cards" id="results" style="margin-top:12px"></div>
+    <div style="margin-top:12px" class="hidden" id="moreWrap"><button class="btn soft" style="width:100%" id="btnMore"></button></div>
+  </section>
+
+  <!-- TRIP -->
+  <section id="v-trip" class="hidden">
+    <h2 data-t="tripT"></h2>
+    <div id="tripBody"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="v-set" class="hidden">
+    <h2 data-t="setT"></h2>
+    <div class="panel">
+      <h3 data-t="keyT"></h3>
+      <div class="note" data-t="keyHelp"></div>
+      <div class="field"><input id="inKey" type="password" autocomplete="off" spellcheck="false"></div>
+      <div class="row">
+        <button class="btn soft" id="btnShowKey" data-t="show"></button>
+        <button class="btn soft" id="btnSaveKey" data-t="saveTest"></button>
+      </div>
+      <div id="keyMsg"></div>
+    </div>
+    <div class="panel">
+      <h3 data-t="usualT"></h3>
+      <div class="note" data-t="usualHelp"></div>
+      <div class="regions" id="usualRegions"></div>
+    </div>
+    <div class="panel">
+      <h3 data-t="aiT"></h3>
+      <div class="note" data-t="aiHelp"></div>
+      <div class="field"><label data-t="aiKeyL"></label><input id="inAiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
+      <div class="field"><label data-t="aiModelL"></label><input id="inAiModel" spellcheck="false"></div>
+      <button class="btn soft" id="btnSaveAi" style="width:100%" data-t="save"></button>
+      <div id="aiMsg"></div>
+    </div>
+  </section>
+</div>
+
+<nav><div>
+  <button data-view="explore" class="on"><span class="ic">🧭</span><span data-t="navExplore"></span></button>
+  <button data-view="trip"><span class="ic">🗺️</span><span data-t="navTrip"></span><span class="badge hidden" id="tripCount"></span></button>
+  <button data-view="set"><span class="ic">⚙️</span><span data-t="navSet"></span></button>
+</div></nav>
+
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ---------- storage (safe) ---------- */
+const mem = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('wk_'+k); return v==null ? (k in mem ? mem[k] : d) : JSON.parse(v); }catch(e){ return k in mem ? mem[k] : d; } },
+  set(k, v){ mem[k] = v; try{ localStorage.setItem('wk_'+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- text ---------- */
+const T = {
+ en:{
+  heroT:"Discover a new side of Korea", heroS:"Pick what you love and a region — we'll find places using official Korea Tourism data.",
+  step1:"1. What do you love?", step2:"2. Where to?", surprise:"🎲 Surprise me", near:"📍 Near me",
+  find:"Find places", more:"Show more", usualTag:"usual", newTag:"new",
+  pickCat:"Pick at least one interest above.", pickReg:"Pick a region, tap “Surprise me”, or use “Near me”.",
+  needKey:"Add your data.go.kr service key in Settings first.", searching:"Searching official tourism data…",
+  none:"No places found. Try another interest or region.", found:n=>`${n} places found`,
+  bestMatch:"Best match", surpriseMsg:r=>`How about somewhere new? ✨ ${r}`, noNew:"You've marked every region as usual! Clear some in Settings.",
+  nearOn:"Using your location (within 20 km)", geoFail:"Couldn't get your location. Please allow location access or pick a region.",
+  save:"Save", saved:"Saved", addTrip:"♡ Add to my trip", inTrip:"♥ In my trip",
+  addr:"Address", tel:"Phone", web:"Website", period:"Dates", gmap:"Google Maps", nmap:"Naver Map", loadingDetail:"Loading details…",
+  tripT:"My trip", tripEmpty:"Tap ♡ on places you like — they'll appear here and we'll plan a day route for you.",
+  smartT:"Smart day plan", smartS:"Ordered to minimise travel between stops.", km:"km", start:"Start",
+  aiBtn:"✨ Ask AI to write my travel plan", aiNoKey:"To use AI plans, add a Claude API key in Settings. (Your smart day plan above works without it.)",
+  aiWorking:"AI is writing your plan…", clear:"Clear all", clearQ:"Remove all places from your trip?",
+  setT:"Settings", keyT:"Tourism data key (required)",
+  keyHelp:"Paste your service key from data.go.kr. You need approval for both “Korea Tourism Organization – Korean tour info (KorService2)” and “English tour info (EngService2)”. New keys can take 1–2 hours to activate.",
+  show:"Show", hide:"Hide", saveTest:"Save & test", keyOk:"Key works! You're ready to explore.", keyTesting:"Testing…",
+  usualT:"My usual regions", usualHelp:"Mark places you already go often. “Surprise me” will suggest somewhere else.",
+  aiT:"AI travel plan (optional)", aiHelp:"With a Claude API key (console.anthropic.com), AI writes a friendly day plan from your saved places. Usage is billed to your key. The key stays in this browser only.",
+  aiKeyL:"Claude API key", aiModelL:"Model", aiSaved:"Saved.",
+  navExplore:"Explore", navTrip:"My trip", navSet:"Settings",
+  errNet:"Couldn't reach the tourism server. Check your internet connection and try again.",
+  errKey:"The service key was rejected. Check that it's correct, that both tour APIs are approved, and wait 1–2 hours if it's new."
+ },
+ ko:{
+  heroT:"몰랐던 한국을 발견하세요", heroS:"좋아하는 테마와 지역을 고르면, 한국관광공사 공식 데이터로 여행지를 찾아드려요.",
+  step1:"1. 무엇을 좋아하세요?", step2:"2. 어디로 갈까요?", surprise:"🎲 새로운 곳 추천", near:"📍 내 주변",
+  find:"여행지 찾기", more:"더 보기", usualTag:"자주 감", newTag:"새로운",
+  pickCat:"관심 테마를 하나 이상 골라주세요.", pickReg:"지역을 고르거나 ‘새로운 곳 추천’ 또는 ‘내 주변’을 눌러주세요.",
+  needKey:"먼저 설정에서 공공데이터포털 인증키를 넣어주세요.", searching:"공식 관광 데이터를 찾는 중…",
+  none:"결과가 없어요. 다른 테마나 지역을 골라보세요.", found:n=>`${n}곳을 찾았어요`,
+  bestMatch:"추천", surpriseMsg:r=>`이번엔 새로운 곳 어때요? ✨ ${r}`, noNew:"모든 지역이 ‘자주 감’으로 되어 있어요. 설정에서 몇 곳을 해제해 주세요.",
+  nearOn:"현재 위치 기준 20km 이내", geoFail:"위치를 가져오지 못했어요. 위치 권한을 허용하거나 지역을 골라주세요.",
+  save:"저장", saved:"저장됨", addTrip:"♡ 내 여행에 담기", inTrip:"♥ 담은 곳",
+  addr:"주소", tel:"전화", web:"홈페이지", period:"기간", gmap:"구글 지도", nmap:"네이버 지도", loadingDetail:"상세 정보를 불러오는 중…",
+  tripT:"내 여행", tripEmpty:"마음에 드는 곳의 ♡를 누르면 여기 모이고, 하루 동선을 짜드려요.",
+  smartT:"스마트 하루 코스", smartS:"이동 거리가 가장 짧도록 순서를 정했어요.", km:"km", start:"출발",
+  aiBtn:"✨ AI에게 여행 계획 부탁하기", aiNoKey:"AI 계획을 쓰려면 설정에 Claude API 키를 넣어주세요. (위의 스마트 코스는 키 없이도 됩니다.)",
+  aiWorking:"AI가 여행 계획을 쓰는 중…", clear:"모두 지우기", clearQ:"담은 곳을 모두 지울까요?",
+  setT:"설정", keyT:"관광 데이터 인증키 (필수)",
+  keyHelp:"공공데이터포털(data.go.kr)의 일반 인증키를 붙여넣으세요. ‘한국관광공사_국문 관광정보 서비스(KorService2)’와 ‘영문 관광정보 서비스(EngService2)’ 두 가지 모두 활용신청이 되어 있어야 해요. 새 키는 활성화까지 1~2시간 걸릴 수 있어요.",
+  show:"보기", hide:"숨기기", saveTest:"저장 & 테스트", keyOk:"인증키가 잘 작동해요! 이제 탐색해 보세요.", keyTesting:"확인 중…",
+  usualT:"자주 가는 지역", usualHelp:"이미 자주 가는 곳을 표시하면, ‘새로운 곳 추천’이 다른 지역을 골라줘요.",
+  aiT:"AI 여행 계획 (선택)", aiHelp:"Claude API 키(console.anthropic.com)를 넣으면, 담은 장소로 AI가 친절한 하루 일정을 써줘요. 사용 요금은 본인 키로 청구되며, 키는 이 브라우저에만 저장돼요.",
+  aiKeyL:"Claude API 키", aiModelL:"모델", aiSaved:"저장했어요.",
+  navExplore:"탐색", navTrip:"내 여행", navSet:"설정",
+  errNet:"관광 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
+  errKey:"인증키가 거부되었어요. 키가 맞는지, 두 관광 API 모두 활용신청이 승인됐는지 확인하고, 새 키라면 1~2시간 뒤 다시 시도해 주세요."
+ }
+};
+
+/* ---------- data ---------- */
+// lDongRegnCd (legal-dong province codes used by TourAPI v4.x)
+const REGIONS = [
+ {c:'11',en:'Seoul',ko:'서울',den:'Palaces, markets & city nights',dko:'고궁, 전통시장, 도시의 밤'},
+ {c:'26',en:'Busan',ko:'부산',den:'Beaches, seafood & harbor views',dko:'해변, 해산물, 항구 풍경'},
+ {c:'28',en:'Incheon',ko:'인천',den:'Islands, Chinatown & sunsets',dko:'섬, 차이나타운, 서해 노을'},
+ {c:'27',en:'Daegu',ko:'대구',den:'Palgongsan & food alleys',dko:'팔공산과 먹자골목'},
+ {c:'29',en:'Gwangju',ko:'광주',den:'Art, culture & Mudeungsan',dko:'예술, 문화, 무등산'},
+ {c:'30',en:'Daejeon',ko:'대전',den:'Science city & forest trails',dko:'과학도시와 숲길'},
+ {c:'31',en:'Ulsan',ko:'울산',den:'Whales, cliffs & Yeongnam Alps',dko:'고래, 해안절벽, 영남알프스'},
+ {c:'36',en:'Sejong',ko:'세종',den:'Lake parks & quiet walks',dko:'호수공원과 한적한 산책'},
+ {c:'41',en:'Gyeonggi',ko:'경기',den:'Fortresses, valleys & day trips',dko:'산성, 계곡, 당일치기'},
+ {c:'51',en:'Gangwon',ko:'강원',den:'Mountains, East Sea & ski slopes',dko:'설악·오대산, 동해, 스키'},
+ {c:'43',en:'Chungbuk',ko:'충북',den:'Lakes & inland valleys',dko:'호수와 내륙 계곡'},
+ {c:'44',en:'Chungnam',ko:'충남',den:'Baekje heritage & tidal flats',dko:'백제 유산과 서해 갯벌'},
+ {c:'52',en:'Jeonbuk',ko:'전북',den:'Hanok village & bibimbap',dko:'한옥마을과 비빔밥'},
+ {c:'46',en:'Jeonnam',ko:'전남',den:'Islands, green tea & slow towns',dko:'다도해, 녹차밭, 슬로시티'},
+ {c:'47',en:'Gyeongbuk',ko:'경북',den:'Silla history, Gyeongju & Andong',dko:'신라 역사, 경주, 안동'},
+ {c:'48',en:'Gyeongnam',ko:'경남',den:'Southern coast & Jirisan',dko:'남해안 풍경과 지리산'},
+ {c:'50',en:'Jeju',ko:'제주',den:'Volcanic island & Olle trails',dko:'화산섬, 올레길, 오름'}
+];
+// contentTypeId differs between Korean and English services
+const TYPE = { attraction:{ko:12,en:76}, culture:{ko:14,en:78}, festival:{ko:15,en:85}, leports:{ko:28,en:75}, stay:{ko:32,en:80}, shop:{ko:38,en:79}, food:{ko:39,en:82} };
+const CATS = [
+ {id:'hiking', ic:'⛰️', en:'Hiking', ko:'등산', kw:{en:['mountain','trail','hiking'], ko:['산','둘레길','등산']}},
+ {id:'fishing', ic:'🎣', en:'Fishing', ko:'낚시', kw:{en:['fishing'], ko:['낚시','바다낚시']}},
+ {id:'cycling', ic:'🚴', en:'Cycling', ko:'자전거', kw:{en:['bike','bicycle','cycling'], ko:['자전거','라이딩']}},
+ {id:'food', ic:'🍜', en:'Food trip', ko:'먹방', type:'food', kw:{en:['market'], ko:['시장','맛집']}},
+ {id:'healing', ic:'🌿', en:'Healing', ko:'힐링', kw:{en:['forest','arboretum','spa','temple'], ko:['휴양림','수목원','온천','치유']}},
+ {id:'sea', ic:'🏖️', en:'Sea & islands', ko:'바다·섬', kw:{en:['beach','island','coast'], ko:['해수욕장','섬','해변']}},
+ {id:'culture', ic:'🏯', en:'History', ko:'역사·문화', type:'culture', kw:{en:['palace','hanok','fortress'], ko:['고궁','한옥','산성']}},
+ {id:'festival', ic:'🎉', en:'Festivals', ko:'축제', festival:true, kw:{en:[],ko:[]}},
+ {id:'activity', ic:'🛶', en:'Activities', ko:'레저', type:'leports', kw:{en:[],ko:[]}}
+];
+const CAT = Object.fromEntries(CATS.map(c=>[c.id,c]));
+
+/* ---------- state ---------- */
+const S = {
+  lang: store.get('lang','en'),
+  cats: new Set(store.get('cats',[])),
+  region: store.get('region', null),
+  near: null,          // {x,y} when using location
+  usual: new Set(store.get('usual',[])),
+  trip: store.get('trip',[]),
+  results: [], shown: 0,
+  key: store.get('key',''), aiKey: store.get('aiKey',''), aiModel: store.get('aiModel','claude-haiku-4-5-20251001'),
+  aiText: ''
+};
+const t = k => T[S.lang][k];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const regName = c => { const r = REGIONS.find(r=>r.c===c); return r ? r[S.lang] : ''; };
+
+/* ---------- TourAPI ---------- */
+class ApiError extends Error { constructor(msg, kind){ super(msg); this.kind = kind; } }
+async function api(op, params, lang = S.lang){
+  const svc = lang === 'en' ? 'EngService2' : 'KorService2';
+  const key = S.key.trim();
+  const keyParam = /%[0-9A-Fa-f]{2}/.test(key) ? key : encodeURIComponent(key); // accepts encoded or decoded key
+  const q = new URLSearchParams({MobileOS:'ETC', MobileApp:'WanderKorea', _type:'json', numOfRows:'20', pageNo:'1'});
+  for (const [k,v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') q.set(k, v);
+  const url = `https://apis.data.go.kr/B551011/${svc}/${op}?serviceKey=${keyParam}&${q}`;
+  let res, text;
+  try { res = await fetch(url); text = await res.text(); }
+  catch(e){ throw new ApiError(t('errNet'), 'net'); }
+  let j = null; try { j = JSON.parse(text); } catch(e){}
+  if (!j){
+    if (/SERVICE_KEY|SERVICE KEY|UNREGISTERED|NOT_REGISTERED|Unauthorized|등록되지/i.test(text) || res.status === 401 || res.status === 403)
+      throw new ApiError(t('errKey'), 'key');
+    const m = text.match(/<(?:returnAuthMsg|errMsg|resultMsg)>([^<]+)</);
+    throw new ApiError(m ? m[1] : `HTTP ${res.status}`, 'other');
+  }
+  if (j.resultCode && j.resultCode !== '0000') throw new ApiError(j.resultMsg || j.resultCode, 'other');
+  const h = j.response?.header;
+  if (h && h.resultCode !== '0000') {
+    if (/KEY/i.test(h.resultMsg||'')) throw new ApiError(t('errKey'), 'key');
+    throw new ApiError(h.resultMsg || 'Error', 'other');
+  }
+  const it = j.response?.body?.items?.item;
+  return !it ? [] : Array.isArray(it) ? it : [it];
+}
+const typeId = k => TYPE[k][S.lang];
+const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; };
+
+/* ---------- recommend ---------- */
+function queriesFor(cat){
+  const Q = [], base = S.near ? null : {lDongRegnCd:S.region};
+  if (S.near){
+    const loc = {mapX:S.near.x, mapY:S.near.y, radius:20000, arrange:'E', numOfRows:40};
+    if (cat.type) Q.push(['locationBasedList2', {...loc, contentTypeId:typeId(cat.type)}]);
+    else if (cat.festival) Q.push(['locationBasedList2', {...loc, contentTypeId:typeId('festival')}]);
+    else Q.push(['locationBasedList2', {...loc, numOfRows:100}]); // filtered by keyword below
+    return Q;
+  }
+  for (const kw of cat.kw[S.lang]) Q.push(['searchKeyword2', {...base, keyword:kw, arrange:'Q', numOfRows:15}]);
+  if (cat.type) Q.push(['areaBasedList2', {...base, contentTypeId:typeId(cat.type), arrange:'Q', numOfRows:25}]);
+  if (cat.festival) Q.push(['searchFestival2', {...base, eventStartDate:today(), arrange:'Q', numOfRows:25}]);
+  return Q;
+}
+function kwHit(cat, title){
+  const s = (title||'').toLowerCase();
+  return cat.kw.en.concat(cat.kw.ko).some(k => s.includes(k.toLowerCase()));
+}
+async function recommend(){
+  const cats = [...S.cats].map(id=>CAT[id]);
+  const jobs = [];
+  for (const c of cats) for (const [op,p] of queriesFor(c)) jobs.push({c, p:api(op,p)});
+  const settled = await Promise.allSettled(jobs.map(j=>j.p));
+  const errs = settled.filter(s=>s.status==='rejected').map(s=>s.reason);
+  if (errs.length === settled.length) throw errs[0];
+  const map = new Map();
+  settled.forEach((s,i)=>{
+    if (s.status!=='fulfilled') return;
+    const c = jobs[i].c, genericNear = S.near && !c.type && !c.festival;
+    for (const it of s.value){
+      if (genericNear && !kwHit(c, it.title)) continue;
+      const id = it.contentid; if (!id) continue;
+      const cur = map.get(id) || {...it, _cats:new Set(), _lang:S.lang};
+      cur._cats.add(c.id); map.set(id, cur);
+    }
+  });
+  // "AI-lite" scoring: interest overlap + title keyword + photo + a pinch of serendipity
+  const list = [...map.values()].map(it=>{
+    let sc = it._cats.size * 10;
+    for (const cid of it._cats) if (kwHit(CAT[cid], it.title)) sc += 3;
+    if (it.firstimage) sc += 4;
+    if (S.near && it.dist) sc -= Math.min(6, Number(it.dist)/4000);
+    sc += Math.random()*2.5;
+    return {...it, _cats:[...it._cats], _score:sc};
+  }).sort((a,b)=>b._score-a._score);
+  if (list.length) list.slice(0, Math.min(3, list.length)).forEach(x=>x._best=true);
+  return list;
+}
+
+/* ---------- render: explore ---------- */
+function renderCats(){
+  $('#cats').innerHTML = CATS.map(c=>`<button class="chip ${S.cats.has(c.id)?'on':''}" data-cat="${c.id}"><span class="ic">${c.ic}</span>${esc(c[S.lang])}</button>`).join('');
+}
+function renderRegions(){
+  $('#regions').innerHTML = REGIONS.map(r=>{
+    const u = S.usual.has(r.c), tag = S.usual.size ? (u ? `<span class="tag">${t('usualTag')}</span>` : `<span class="tag new">${t('newTag')}</span>`) : '';
+    return `<button class="reg ${S.region===r.c && !S.near?'on':''}" data-reg="${r.c}">${tag}${esc(r[S.lang])}</button>`;
+  }).join('');
+  $('#usualRegions').innerHTML = REGIONS.map(r=>`<button class="reg ${S.usual.has(r.c)?'on':''}" data-usual="${r.c}">${S.usual.has(r.c)?'★ ':''}${esc(r[S.lang])}</button>`).join('');
+  $('#btnNear').classList.toggle('on', !!S.near);
+  const sp = $('#spot');
+  if (S.near){ sp.classList.remove('hidden'); sp.innerHTML = `<b>📍 ${t('near').replace('📍 ','')}</b><div class="note">${t('nearOn')}</div>`; }
+  else if (S.region){ const r = REGIONS.find(r=>r.c===S.region); sp.classList.remove('hidden');
+    sp.innerHTML = `<b>${esc(r[S.lang])}</b> — ${esc(S.lang==='en'?r.den:r.dko)}${S.surpriseNote?`<div class="note">${esc(S.surpriseNote)}</div>`:''}`; }
+  else sp.classList.add('hidden');
+}
+function catEmoji(it){ const c = it._cats && it._cats[0]; return c ? CAT[c].ic : '📍'; }
+function inTrip(id){ return S.trip.some(x=>x.contentid===id); }
+function cardHTML(it){
+  const img = it.firstimage2 || it.firstimage;
+  const pills = (it._best?`<span class="pill best">★ ${t('bestMatch')}</span>`:'') + (it._cats||[]).map(c=>`<span class="pill">${CAT[c].ic} ${esc(CAT[c][S.lang])}</span>`).join('');
+  const extra = it.eventstartdate ? ` · ${fmtDate(it.eventstartdate)}–${fmtDate(it.eventenddate)}` : '';
+  const dist = it.dist ? ` · ${(Number(it.dist)/1000).toFixed(1)} ${t('km')}` : '';
+  return `<div class="card" data-open="${esc(it.contentid)}">
+    <div class="img" style="${img?`background-image:url('${esc(img).replace(/^http:/,'https:')}')`:''}">${img?'':catEmoji(it)}</div>
+    <div class="body"><div class="t">${esc(it.title)}</div><div class="a">${esc(it.addr1||'')}${dist}${extra}</div><div class="pills">${pills}</div></div>
+    <button class="heart" data-heart="${esc(it.contentid)}" aria-label="save">${inTrip(it.contentid)?'♥':'♡'}</button>
+  </div>`;
+}
+const fmtDate = d => d ? `${d.slice(4,6)}.${d.slice(6,8)}` : '';
+function renderResults(){
+  const list = S.results.slice(0, S.shown);
+  $('#results').innerHTML = list.map(cardHTML).join('');
+  $('#moreWrap').classList.toggle('hidden', S.shown >= S.results.length);
+}
+function status(html){ $('#status').innerHTML = html; }
+
+async function find(){
+  if (!S.key) { status(`<div class="msg err">${t('needKey')}</div>`); return; }
+  if (!S.cats.size) { status(`<div class="msg warn">${t('pickCat')}</div>`); return; }
+  if (!S.region && !S.near) { status(`<div class="msg warn">${t('pickReg')}</div>`); return; }
+  $('#results').innerHTML=''; $('#moreWrap').classList.add('hidden');
+  status(`<div class="loading"><div class="spinner"></div>${t('searching')}</div>`);
+  $('#btnFind').disabled = true;
+  try{
+    S.results = await recommend(); S.shown = 12;
+    status(S.results.length ? `<div class="note" style="margin-top:12px">${t('found')(S.results.length)}${S.region&&!S.near?' · '+esc(regName(S.region)):''}</div>` : `<div class="msg warn">${t('none')}</div>`);
+    renderResults();
+    if (S.results.length) $('#status').scrollIntoView({behavior:'smooth', block:'start'});
+  }catch(e){ status(`<div class="msg err">${esc(e.message)}</div>`); }
+  finally{ $('#btnFind').disabled = false; }
+}
+
+/* ---------- detail sheet ---------- */
+function findItem(id){ return S.results.find(x=>x.contentid===id) || S.trip.find(x=>x.contentid===id); }
+async function openDetail(id){
+  const it = findItem(id); if (!it) return;
+  const img = it.firstimage || it.firstimage2;
+  const lang = it._lang || S.lang;
+  $('#sheet').innerHTML = `<button class="close" data-close>✕</button>
+    <div class="hero-img" style="${img?`background-image:url('${esc(img).replace(/^http:/,'https:')}')`:''}">${img?'':catEmoji(it)}</div>
+    <div class="in"><h3>${esc(it.title)}</h3><div id="dBody"><div class="loading"><div class="spinner"></div>${t('loadingDetail')}</div></div></div>`;
+  $('#sheetBg').classList.add('open');
+  let d = {};
+  try { d = (await api('detailCommon2', {contentId:id}, lang))[0] || {}; } catch(e) { d = {}; }
+  const ov = String(d.overview||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim();
+  const hp = (String(d.homepage||'').match(/href=["']?([^"' >]+)/i)||[])[1] || (/^https?:\/\//.test(d.homepage||'')?d.homepage:'');
+  const addr = [d.addr1||it.addr1, d.addr2||it.addr2].filter(Boolean).join(' ');
+  const tel = String(d.tel||it.tel||'').replace(/<[^>]+>/g,'');
+  const y = d.mapy||it.mapy, x = d.mapx||it.mapx;
+  const gq = y&&x ? `${y},${x}` : encodeURIComponent(it.title);
+  $('#dBody').innerHTML = `
+    ${addr?`<div class="kv">📍 <b>${t('addr')}</b> ${esc(addr)}</div>`:''}
+    ${tel?`<div class="kv">📞 <b>${t('tel')}</b> <a href="tel:${esc(tel.replace(/[^0-9+\-]/g,''))}">${esc(tel)}</a></div>`:''}
+    ${it.eventstartdate?`<div class="kv">🗓️ <b>${t('period')}</b> ${esc(it.eventstartdate)} – ${esc(it.eventenddate||'')}</div>`:''}
+    ${ov?`<div class="ov">${esc(ov)}</div>`:''}
+    <div class="links">
+      <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${gq}">🗺️ ${t('gmap')}</a>
+      <a target="_blank" rel="noopener" href="https://map.naver.com/p/search/${encodeURIComponent(it.title)}">🧭 ${t('nmap')}</a>
+      ${hp?`<a target="_blank" rel="noopener" href="${esc(hp)}">🔗 ${t('web')}</a>`:''}
+    </div>
+    <button class="btn primary" data-heart="${esc(id)}" id="sheetHeart">${inTrip(id)?t('inTrip'):t('addTrip')}</button>`;
+}
+function closeSheet(){ $('#sheetBg').classList.remove('open'); }
+
+/* ---------- trip ---------- */
+function toggleTrip(id){
+  if (inTrip(id)) S.trip = S.trip.filter(x=>x.contentid!==id);
+  else { const it = findItem(id); if (!it) return;
+    const {contentid,title,addr1,addr2,firstimage,firstimage2,mapx,mapy,tel,contenttypeid,eventstartdate,eventenddate,_cats} = it;
+    S.trip.push({contentid,title,addr1,addr2,firstimage,firstimage2,mapx,mapy,tel,contenttypeid,eventstartdate,eventenddate,_cats,_lang:it._lang||S.lang}); }
+  store.set('trip', S.trip); S.aiText='';
+  document.querySelectorAll(`[data-heart="${CSS.escape(id)}"]`).forEach(b=>{ b.textContent = b.id==='sheetHeart' ? (inTrip(id)?t('inTrip'):t('addTrip')) : (inTrip(id)?'♥':'♡'); });
+  renderTripCount(); if (!$('#v-trip').classList.contains('hidden')) renderTrip();
+}
+function renderTripCount(){ const b = $('#tripCount'); b.textContent = S.trip.length; b.classList.toggle('hidden', !S.trip.length); }
+function hav(a,b){ const R=6371, toR=Math.PI/180, dLat=(b.y-a.y)*toR, dLng=(b.x-a.x)*toR;
+  const h=Math.sin(dLat/2)**2+Math.cos(a.y*toR)*Math.cos(b.y*toR)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function smartOrder(){
+  const pts = S.trip.map(x=>({...x, x:+x.mapx, y:+x.mapy})).filter(p=>p.x&&p.y);
+  const noLoc = S.trip.filter(x=>!(+x.mapx&&+x.mapy));
+  if (pts.length < 2) return {order:[...pts,...noLoc], legs:[]};
+  // try each start, nearest neighbour, keep the shortest
+  let best=null;
+  for (let s=0;s<pts.length;s++){
+    const left=[...pts], ord=[left.splice(s,1)[0]], legs=[]; let tot=0;
+    while(left.length){ const cur=ord[ord.length-1]; let bi=0,bd=Infinity;
+      left.forEach((p,i)=>{const d=hav(cur,p); if(d<bd){bd=d;bi=i;}}); ord.push(left.splice(bi,1)[0]); legs.push(bd); tot+=bd; }
+    if(!best||tot<best.tot) best={order:ord,legs,tot};
+  }
+  return {order:[...best.order,...noLoc], legs:best.legs};
+}
+function renderTrip(){
+  const el = $('#tripBody');
+  if (!S.trip.length){ el.innerHTML = `<div class="empty"><div class="ic">🧳</div>${t('tripEmpty')}</div>`; return; }
+  const {order, legs} = smartOrder();
+  let min = 9*60;
+  const stops = order.map((it,i)=>{
+    const tm = `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
+    const leg = i>0 && legs[i-1]!=null ? `↳ ${legs[i-1].toFixed(1)} ${t('km')}` : (i===0?t('start'):'');
+    const isFood = (it._cats||[]).includes('food');
+    min += (isFood?75:110) + (legs[i]!=null ? Math.round(10 + legs[i]*1.8) : 20);
+    min = Math.round(min/15)*15;
+    return `<div class="stop"><div class="tm">${tm}</div><div style="min-width:0"><div class="nm" data-open="${esc(it.contentid)}">${(it._cats&&it._cats[0])?CAT[it._cats[0]].ic+' ':''}${esc(it.title)}</div><div class="leg">${esc(leg)} · ${esc(it.addr1||'')}</div></div><button class="rm" data-heart="${esc(it.contentid)}" aria-label="remove">✕</button></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="panel"><h3>🧭 ${t('smartT')}</h3><div class="note">${t('smartS')}</div>${stops}</div>
+    <div class="panel"><button class="btn primary" id="btnAi">${t('aiBtn')}</button><div id="aiOut" class="ai-out">${S.aiText?esc(S.aiText):''}</div></div>
+    <button class="btn soft" style="width:100%" id="btnClear">${t('clear')}</button>`;
+}
+async function askAI(){
+  const out = $('#aiOut');
+  if (!S.aiKey){ out.innerHTML = `<div class="msg warn">${t('aiNoKey')}</div>`; return; }
+  const {order} = smartOrder();
+  const likes = [...S.cats].map(c=>CAT[c].en).join(', ') || 'general sightseeing';
+  const places = order.map((p,i)=>`${i+1}. ${p.title} — ${p.addr1||''} [${(p._cats||[]).join(',')}]`).join('\n');
+  const prompt = `You are a warm, practical Korea travel guide. Write a one-day travel plan in ${S.lang==='en'?'English (for a foreign visitor)':'Korean'} using ONLY these saved places, in this order (already optimised for distance):\n${places}\n\nTraveller's interests: ${likes}.\nFor each stop give a suggested time, what to do or eat there, and one tip (transport, etiquette, or what to bring). Add a short closing tip about getting around. Keep it under 350 words, plain text with simple line breaks, no markdown tables. Do not invent opening hours or prices; say "check before visiting" if relevant.`;
+  out.innerHTML = `<div class="loading"><div class="spinner"></div>${t('aiWorking')}</div>`;
+  $('#btnAi').disabled = true;
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST',
+      headers:{'content-type':'application/json','x-api-key':S.aiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:S.aiModel, max_tokens:1200, messages:[{role:'user', content:prompt}]}) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error?.message || `HTTP ${r.status}`);
+    S.aiText = (j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').replace(/\*\*/g,'');
+    out.textContent = S.aiText;
+  }catch(e){ out.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  finally{ const b=$('#btnAi'); if(b) b.disabled=false; }
+}
+
+/* ---------- views, i18n ---------- */
+function applyText(){
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{ const v=t(el.dataset.t); if(typeof v==='string') el.textContent=v; });
+  document.querySelectorAll('.lang button').forEach(b=>b.classList.toggle('on', b.dataset.lang===S.lang));
+  $('#btnSurprise').textContent = t('surprise'); $('#btnNear').textContent = t('near');
+  $('#btnFind').textContent = t('find'); $('#btnMore').textContent = t('more');
+  $('#btnShowKey').textContent = $('#inKey').type==='password' ? t('show') : t('hide');
+  const kw = $('#keyWarn'); kw.textContent = t('needKey'); kw.classList.toggle('hidden', !!S.key);
+  renderCats(); renderRegions(); renderResults(); renderTripCount();
+  if (!$('#v-trip').classList.contains('hidden')) renderTrip();
+}
+function show(view){
+  ['explore','trip','set'].forEach(v=>$('#v-'+v).classList.toggle('hidden', v!==view));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
+  if (view==='trip') renderTrip();
+  window.scrollTo(0,0);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e=>{
+  const g = s => e.target.closest(s);
+  let el;
+  if ((el = g('[data-heart]'))) { e.stopPropagation(); toggleTrip(el.dataset.heart); return; }
+  if ((el = g('[data-close]')) || e.target === $('#sheetBg')) { closeSheet(); return; }
+  if ((el = g('[data-open]'))) { openDetail(el.dataset.open); return; }
+  if ((el = g('[data-cat]'))) { const c=el.dataset.cat; S.cats.has(c)?S.cats.delete(c):S.cats.add(c); store.set('cats',[...S.cats]); renderCats(); return; }
+  if ((el = g('[data-reg]'))) { S.region = el.dataset.reg; S.near = null; S.surpriseNote=''; store.set('region',S.region); renderRegions(); return; }
+  if ((el = g('[data-usual]'))) { const c=el.dataset.usual; S.usual.has(c)?S.usual.delete(c):S.usual.add(c); store.set('usual',[...S.usual]); renderRegions(); return; }
+  if ((el = g('[data-lang]'))) { S.lang = el.dataset.lang; store.set('lang',S.lang); S.results=[]; S.shown=0; S.surpriseNote=''; status(''); applyText(); return; }
+  if ((el = g('nav button'))) { show(el.dataset.view); return; }
+  if (g('#btnFind')) { find(); return; }
+  if (g('#btnMore')) { S.shown += 12; renderResults(); return; }
+  if (g('#btnAi')) { askAI(); return; }
+  if (g('#btnClear')) { if (confirm(t('clearQ'))) { S.trip=[]; S.aiText=''; store.set('trip',[]); renderTrip(); renderTripCount(); } return; }
+  if (g('#btnSurprise')) {
+    const pool = REGIONS.filter(r=>!S.usual.has(r.c) && r.c!==S.region);
+    if (!pool.length){ status(`<div class="msg warn">${t('noNew')}</div>`); return; }
+    const r = pool[Math.floor(Math.random()*pool.length)];
+    S.region = r.c; S.near = null; store.set('region',S.region);
+    S.surpriseNote = t('surpriseMsg')(r[S.lang]); status(''); renderRegions(); return;
+  }
+  if (g('#btnNear')) {
+    if (S.near){ S.near=null; renderRegions(); return; }
+    if (!navigator.geolocation){ status(`<div class="msg err">${t('geoFail')}</div>`); return; }
+    navigator.geolocation.getCurrentPosition(p=>{ S.near={x:p.coords.longitude.toFixed(6), y:p.coords.latitude.toFixed(6)}; status(''); renderRegions(); },
+      ()=>status(`<div class="msg err">${t('geoFail')}</div>`), {timeout:10000});
+    return;
+  }
+  if (g('#btnShowKey')) { const i=$('#inKey'); i.type = i.type==='password'?'text':'password'; applyText(); return; }
+  if (g('#btnSaveKey')) {
+    S.key = $('#inKey').value.trim(); store.set('key', S.key); applyText();
+    const m = $('#keyMsg'); if (!S.key){ m.innerHTML=''; return; }
+    m.innerHTML = `<div class="msg ok">${t('keyTesting')}</div>`;
+    Promise.all([api('areaBasedList2',{lDongRegnCd:'11',numOfRows:1},'ko'), api('areaBasedList2',{lDongRegnCd:'11',numOfRows:1},'en')])
+      .then(()=>m.innerHTML=`<div class="msg ok">${t('keyOk')}</div>`)
+      .catch(err=>m.innerHTML=`<div class="msg err">${esc(err.message)}</div>`);
+    return;
+  }
+  if (g('#btnSaveAi')) { S.aiKey=$('#inAiKey').value.trim(); S.aiModel=$('#inAiModel').value.trim()||'claude-haiku-4-5-20251001';
+    store.set('aiKey',S.aiKey); store.set('aiModel',S.aiModel); $('#aiMsg').innerHTML=`<div class="msg ok">${t('aiSaved')}</div>`; return; }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+
+/* ---------- init ---------- */
+$('#inKey').value = S.key; $('#inAiKey').value = S.aiKey; $('#inAiModel').value = S.aiModel;
+applyText();
+if (!S.key) show('set');
+</script>
+</body>
+</html>
