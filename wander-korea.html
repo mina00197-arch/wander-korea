@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wander Korea</title>
 <meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wander Korea">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
   --bg:#f6f7f5; --card:#ffffff; --ink:#1c2321; --muted:#66716d; --line:#e3e7e4;
@@ -98,6 +105,10 @@ nav button.on{color:var(--accent);font-weight:700}
 .ai-out{white-space:pre-wrap;font-size:14.5px;margin-top:10px}
 .empty{text-align:center;color:var(--muted);padding:40px 10px}
 .empty .ic{font-size:44px}
+.install{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--accent);border-radius:14px;padding:12px 14px;margin-top:12px}
+.install img{width:44px;height:44px;border-radius:10px;flex:none}
+.install .tx{flex:1;font-size:14px;line-height:1.35}
+.install .x{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;padding:4px}
 .hidden{display:none!important}
 </style>
 </head>
@@ -111,6 +122,7 @@ nav button.on{color:var(--accent);font-weight:700}
   <!-- EXPLORE -->
   <section id="v-explore">
     <div class="hero"><h1 data-t="heroT"></h1><p data-t="heroS"></p></div>
+    <div class="install hidden" id="installBox"><img src="/icons/icon-192.png" alt=""><div class="tx" id="installTx"></div><button class="btn primary" style="width:auto;padding:10px 14px;font-size:14px" id="btnInstall"></button><button class="x" id="btnInstallX" aria-label="close">✕</button></div>
     <div id="keyWarn" class="msg warn hidden"></div>
 
     <h2 data-t="step1"></h2>
@@ -204,6 +216,7 @@ const T = {
   usualT:"My usual regions", usualHelp:"Mark places you already go often. “Surprise me” will suggest somewhere else.",
   aiT:"AI travel plan (optional)", aiHelp:"With a Claude API key (console.anthropic.com), AI writes a friendly day plan from your saved places. Usage is billed to your key. The key stays in this browser only.",
   aiKeyL:"Claude API key", aiModelL:"Model", aiSaved:"Saved.",
+  installTx:"Add Wander Korea to your home screen — it opens like an app.", installBtn:"Install", iosTx:"To add it to your home screen: tap Share ⬆︎ at the bottom, then “Add to Home Screen”.",
   navExplore:"Explore", navTrip:"My trip", navSet:"Settings",
   errServerKey:"The app's tourism data key isn't set up yet. Please try again later.",
   errNet:"Couldn't reach the tourism server. Check your internet connection and try again.",
@@ -230,6 +243,7 @@ const T = {
   usualT:"자주 가는 지역", usualHelp:"이미 자주 가는 곳을 표시하면, ‘새로운 곳 추천’이 다른 지역을 골라줘요.",
   aiT:"AI 여행 계획 (선택)", aiHelp:"Claude API 키(console.anthropic.com)를 넣으면, 담은 장소로 AI가 친절한 하루 일정을 써줘요. 사용 요금은 본인 키로 청구되며, 키는 이 브라우저에만 저장돼요.",
   aiKeyL:"Claude API 키", aiModelL:"모델", aiSaved:"저장했어요.",
+  installTx:"홈 화면에 Wander Korea 아이콘을 추가하면 앱처럼 바로 열려요.", installBtn:"설치", iosTx:"홈 화면에 추가하려면: 아래쪽 공유 버튼 ⬆︎ → ‘홈 화면에 추가’를 누르세요.",
   navExplore:"탐색", navTrip:"내 여행", navSet:"설정",
   errServerKey:"앱의 관광 데이터 인증키가 아직 설정되지 않았어요. 잠시 후 다시 시도해 주세요.",
   errNet:"관광 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
@@ -547,7 +561,7 @@ function applyText(){
   $('#btnFind').textContent = t('find'); $('#btnMore').textContent = t('more');
   $('#btnShowKey').textContent = $('#inKey').type==='password' ? t('show') : t('hide');
   const kw = $('#keyWarn'); kw.textContent = t('needKey'); kw.classList.toggle('hidden', SERVER || !!S.key);
-  renderCats(); renderRegions(); renderResults(); renderTripCount();
+  renderCats(); renderRegions(); renderResults(); renderTripCount(); if (typeof renderInstall==='function') renderInstall();
   if (!$('#v-trip').classList.contains('hidden')) renderTrip();
 }
 function show(view){
@@ -601,6 +615,25 @@ document.addEventListener('click', e=>{
     store.set('aiKey',S.aiKey); store.set('aiModel',S.aiModel); $('#aiMsg').innerHTML=`<div class="msg ok">${t('aiSaved')}</div>`; return; }
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+
+/* ---------- install as app (PWA) ---------- */
+let deferredInstall = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderInstall(){
+  const box = $('#installBox');
+  if (isStandalone() || store.get('installDismissed', false) || !SERVER) { box.classList.add('hidden'); return; }
+  if (deferredInstall) { $('#installTx').textContent = t('installTx'); $('#btnInstall').textContent = t('installBtn'); $('#btnInstall').classList.remove('hidden'); box.classList.remove('hidden'); }
+  else if (isIOS()) { $('#installTx').textContent = t('iosTx'); $('#btnInstall').classList.add('hidden'); box.classList.remove('hidden'); }
+  else box.classList.add('hidden');
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; renderInstall(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; renderInstall(); });
+document.addEventListener('click', async e => {
+  if (e.target.closest('#btnInstall') && deferredInstall) { deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall = null; renderInstall(); }
+  if (e.target.closest('#btnInstallX')) { store.set('installDismissed', true); renderInstall(); }
+});
+if (SERVER && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
 /* ---------- init ---------- */
 if (S.region && !REGIONS.some(r=>r.c===S.region)) { S.region = null; store.set('region', null); }
