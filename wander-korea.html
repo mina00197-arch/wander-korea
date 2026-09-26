@@ -239,21 +239,23 @@ const T = {
 
 /* ---------- data ---------- */
 // lDongRegnCd (legal-dong province codes used by TourAPI v4.x)
+// c = unique id; rc/sg = lDongRegnCd/lDongSignguCd when the id is a city inside a province
+// (TourAPI 2026: Jeonnam+Gwangju share code 12, Sejong uses 36110)
 const REGIONS = [
  {c:'11',en:'Seoul',ko:'서울',den:'Palaces, markets & city nights',dko:'고궁, 전통시장, 도시의 밤'},
  {c:'26',en:'Busan',ko:'부산',den:'Beaches, seafood & harbor views',dko:'해변, 해산물, 항구 풍경'},
  {c:'28',en:'Incheon',ko:'인천',den:'Islands, Chinatown & sunsets',dko:'섬, 차이나타운, 서해 노을'},
  {c:'27',en:'Daegu',ko:'대구',den:'Palgongsan & food alleys',dko:'팔공산과 먹자골목'},
- {c:'29',en:'Gwangju',ko:'광주',den:'Art, culture & Mudeungsan',dko:'예술, 문화, 무등산'},
  {c:'30',en:'Daejeon',ko:'대전',den:'Science city & forest trails',dko:'과학도시와 숲길'},
  {c:'31',en:'Ulsan',ko:'울산',den:'Whales, cliffs & Yeongnam Alps',dko:'고래, 해안절벽, 영남알프스'},
- {c:'36',en:'Sejong',ko:'세종',den:'Lake parks & quiet walks',dko:'호수공원과 한적한 산책'},
+ {c:'36110',en:'Sejong',ko:'세종',den:'Lake parks & quiet walks',dko:'호수공원과 한적한 산책'},
  {c:'41',en:'Gyeonggi',ko:'경기',den:'Fortresses, valleys & day trips',dko:'산성, 계곡, 당일치기'},
  {c:'51',en:'Gangwon',ko:'강원',den:'Mountains, East Sea & ski slopes',dko:'설악·오대산, 동해, 스키'},
  {c:'43',en:'Chungbuk',ko:'충북',den:'Lakes & inland valleys',dko:'호수와 내륙 계곡'},
  {c:'44',en:'Chungnam',ko:'충남',den:'Baekje heritage & tidal flats',dko:'백제 유산과 서해 갯벌'},
  {c:'52',en:'Jeonbuk',ko:'전북',den:'Hanok village & bibimbap',dko:'한옥마을과 비빔밥'},
- {c:'46',en:'Jeonnam',ko:'전남',den:'Islands, green tea & slow towns',dko:'다도해, 녹차밭, 슬로시티'},
+ {c:'12',en:'Jeonnam·Gwangju',ko:'전남·광주',den:'Islands, green tea, art & Mudeungsan',dko:'다도해, 녹차밭, 예술과 무등산'},
+ {c:'12-110',rc:'12',sg:'110',en:'Mokpo',ko:'목포',den:'Port city, Yudalsan & fresh seafood',dko:'항구도시, 유달산, 싱싱한 해산물'},
  {c:'47',en:'Gyeongbuk',ko:'경북',den:'Silla history, Gyeongju & Andong',dko:'신라 역사, 경주, 안동'},
  {c:'48',en:'Gyeongnam',ko:'경남',den:'Southern coast & Jirisan',dko:'남해안 풍경과 지리산'},
  {c:'50',en:'Jeju',ko:'제주',den:'Volcanic island & Olle trails',dko:'화산섬, 올레길, 오름'}
@@ -335,7 +337,8 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d
 
 /* ---------- recommend ---------- */
 function queriesFor(cat){
-  const Q = [], base = S.near ? null : {lDongRegnCd:S.region};
+  const R = REGIONS.find(r=>r.c===S.region) || {};
+  const Q = [], base = S.near ? null : {lDongRegnCd:R.rc||R.c, lDongSignguCd:R.sg};
   if (S.near){
     const loc = {mapX:S.near.x, mapY:S.near.y, radius:20000, arrange:'E', numOfRows:40};
     if (cat.type) Q.push(['locationBasedList2', {...loc, contentTypeId:typeId(cat.type)}]);
@@ -600,6 +603,7 @@ document.addEventListener('click', e=>{
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
 
 /* ---------- init ---------- */
+if (S.region && !REGIONS.some(r=>r.c===S.region)) { S.region = null; store.set('region', null); }
 $('#inKey').value = S.key; $('#inAiKey').value = S.aiKey; $('#inAiModel').value = S.aiModel;
 applyText();
 if (SERVER) $('#keyPanel').classList.add('hidden');
