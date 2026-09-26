@@ -313,6 +313,8 @@ async function api(op, params, lang = S.lang){
   let j = null; try { j = JSON.parse(text); } catch(e){}
   if (j && j.error === 'NO_KEY') throw new ApiError(t('errServerKey'), 'key');
   if (j && j.error) throw new ApiError(t('errNet'), 'net');
+  const auth = j && j.OpenAPI_ServiceResponse && j.OpenAPI_ServiceResponse.cmmMsgHeader;
+  if (auth) throw new ApiError(/KEY/i.test(auth.errMsg||'') ? t('errKey') : (auth.returnAuthMsg || auth.errMsg || 'Error'), 'key');
   if (!j){
     if (/SERVICE_KEY|SERVICE KEY|UNREGISTERED|NOT_REGISTERED|Unauthorized|등록되지/i.test(text) || res.status === 401 || res.status === 403)
       throw new ApiError(t('errKey'), 'key');
