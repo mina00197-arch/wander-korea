@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
   // Some keys work only in Encoding form, some only in Decoding form: try both.
   const looksEncoded = /%[0-9A-Fa-f]{2}/.test(key);
   let decoded = key; try { decoded = looksEncoded ? decodeURIComponent(key) : key; } catch (e) {}
-  const candidates = [...new Set([encodeURIComponent(decoded), key])];
+  const candidates = [...new Set([encodeURIComponent(decoded), key, decoded])];
   if (q.diag === '1') {
     // shape only, never the key itself
     return res.status(200).json({ length: raw.length, trimmedLength: key.length, looksEncoded,
