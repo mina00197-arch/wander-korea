@@ -139,7 +139,7 @@ nav button.on{color:var(--accent);font-weight:700}
   <!-- SETTINGS -->
   <section id="v-set" class="hidden">
     <h2 data-t="setT"></h2>
-    <div class="panel">
+    <div class="panel" id="keyPanel">
       <h3 data-t="keyT"></h3>
       <div class="note" data-t="keyHelp"></div>
       <div class="field"><input id="inKey" type="password" autocomplete="off" spellcheck="false"></div>
@@ -205,6 +205,7 @@ const T = {
   aiT:"AI travel plan (optional)", aiHelp:"With a Claude API key (console.anthropic.com), AI writes a friendly day plan from your saved places. Usage is billed to your key. The key stays in this browser only.",
   aiKeyL:"Claude API key", aiModelL:"Model", aiSaved:"Saved.",
   navExplore:"Explore", navTrip:"My trip", navSet:"Settings",
+  errServerKey:"The app's tourism data key isn't set up yet. Please try again later.",
   errNet:"Couldn't reach the tourism server. Check your internet connection and try again.",
   errKey:"The service key was rejected. Check that it's correct, that both tour APIs are approved, and wait 1–2 hours if it's new."
  },
@@ -230,6 +231,7 @@ const T = {
   aiT:"AI 여행 계획 (선택)", aiHelp:"Claude API 키(console.anthropic.com)를 넣으면, 담은 장소로 AI가 친절한 하루 일정을 써줘요. 사용 요금은 본인 키로 청구되며, 키는 이 브라우저에만 저장돼요.",
   aiKeyL:"Claude API 키", aiModelL:"모델", aiSaved:"저장했어요.",
   navExplore:"탐색", navTrip:"내 여행", navSet:"설정",
+  errServerKey:"앱의 관광 데이터 인증키가 아직 설정되지 않았어요. 잠시 후 다시 시도해 주세요.",
   errNet:"관광 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
   errKey:"인증키가 거부되었어요. 키가 맞는지, 두 관광 API 모두 활용신청이 승인됐는지 확인하고, 새 키라면 1~2시간 뒤 다시 시도해 주세요."
  }
@@ -283,6 +285,7 @@ const S = {
   key: store.get('key',''), aiKey: store.get('aiKey',''), aiModel: store.get('aiModel','claude-haiku-4-5-20251001'),
   aiText: ''
 };
+const SERVER = /^https?:$/.test(location.protocol); // hosted on Vercel → use /api/tour proxy
 const t = k => T[S.lang][k];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -292,15 +295,24 @@ const regName = c => { const r = REGIONS.find(r=>r.c===c); return r ? r[S.lang] 
 class ApiError extends Error { constructor(msg, kind){ super(msg); this.kind = kind; } }
 async function api(op, params, lang = S.lang){
   const svc = lang === 'en' ? 'EngService2' : 'KorService2';
-  const key = S.key.trim();
-  const keyParam = /%[0-9A-Fa-f]{2}/.test(key) ? key : encodeURIComponent(key); // accepts encoded or decoded key
   const q = new URLSearchParams({MobileOS:'ETC', MobileApp:'WanderKorea', _type:'json', numOfRows:'20', pageNo:'1'});
   for (const [k,v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') q.set(k, v);
-  const url = `https://apis.data.go.kr/B551011/${svc}/${op}?serviceKey=${keyParam}&${q}`;
+  let url;
+  if (SERVER) {
+    // hosted: our own proxy adds the service key (stored on Vercel, never in the browser)
+    q.set('svc', lang); q.set('op', op);
+    url = `/api/tour?${q}`;
+  } else {
+    const key = S.key.trim();
+    const keyParam = /%[0-9A-Fa-f]{2}/.test(key) ? key : encodeURIComponent(key); // accepts encoded or decoded key
+    url = `https://apis.data.go.kr/B551011/${svc}/${op}?serviceKey=${keyParam}&${q}`;
+  }
   let res, text;
   try { res = await fetch(url); text = await res.text(); }
   catch(e){ throw new ApiError(t('errNet'), 'net'); }
   let j = null; try { j = JSON.parse(text); } catch(e){}
+  if (j && j.error === 'NO_KEY') throw new ApiError(t('errServerKey'), 'key');
+  if (j && j.error) throw new ApiError(t('errNet'), 'net');
   if (!j){
     if (/SERVICE_KEY|SERVICE KEY|UNREGISTERED|NOT_REGISTERED|Unauthorized|등록되지/i.test(text) || res.status === 401 || res.status === 403)
       throw new ApiError(t('errKey'), 'key');
@@ -408,7 +420,7 @@ function renderResults(){
 function status(html){ $('#status').innerHTML = html; }
 
 async function find(){
-  if (!S.key) { status(`<div class="msg err">${t('needKey')}</div>`); return; }
+  if (!SERVER && !S.key) { status(`<div class="msg err">${t('needKey')}</div>`); return; }
   if (!S.cats.size) { status(`<div class="msg warn">${t('pickCat')}</div>`); return; }
   if (!S.region && !S.near) { status(`<div class="msg warn">${t('pickReg')}</div>`); return; }
   $('#results').innerHTML=''; $('#moreWrap').classList.add('hidden');
@@ -529,7 +541,7 @@ function applyText(){
   $('#btnSurprise').textContent = t('surprise'); $('#btnNear').textContent = t('near');
   $('#btnFind').textContent = t('find'); $('#btnMore').textContent = t('more');
   $('#btnShowKey').textContent = $('#inKey').type==='password' ? t('show') : t('hide');
-  const kw = $('#keyWarn'); kw.textContent = t('needKey'); kw.classList.toggle('hidden', !!S.key);
+  const kw = $('#keyWarn'); kw.textContent = t('needKey'); kw.classList.toggle('hidden', SERVER || !!S.key);
   renderCats(); renderRegions(); renderResults(); renderTripCount();
   if (!$('#v-trip').classList.contains('hidden')) renderTrip();
 }
@@ -588,7 +600,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
 /* ---------- init ---------- */
 $('#inKey').value = S.key; $('#inAiKey').value = S.aiKey; $('#inAiModel').value = S.aiModel;
 applyText();
-if (!S.key) show('set');
+if (SERVER) $('#keyPanel').classList.add('hidden');
+else if (!S.key) show('set');
 </script>
 </body>
 </html>

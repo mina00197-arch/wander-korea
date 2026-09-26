@@ -12,10 +12,11 @@ A simple travel web app for discovering new regions of Korea, built on the Korea
 - **My trip** – save places and get a day route ordered by shortest distance
 - **AI plan (optional)** – with your own Claude API key, get a written day plan
 
-## How to use
-1. Open `wander-korea.html` in a browser (phone or PC).
-2. In **Settings**, paste your data.go.kr service key and tap **Save & test**.
-   - Both *KorService2* (국문 관광정보) and *EngService2* (영문 관광정보) must be approved on data.go.kr.
-   - New keys can take 1–2 hours to activate.
+## How it works
+- Live site: https://wander-korea.vercel.app — visitors need no key.
+- `api/tour.js` is a Vercel serverless proxy that adds the data.go.kr service key from the
+  environment variable **`TOUR_API_KEY`** (set in Vercel → Project → Settings → Environment Variables).
+- Both *KorService2* (국문 관광정보) and *EngService2* (영문 관광정보) must be approved on data.go.kr.
+- Opening `wander-korea.html` directly as a local file falls back to asking for your own key (stored only in that browser).
 
-Keys are stored only in your browser (localStorage). Never commit keys to this repository.
+Never commit keys to this repository.
